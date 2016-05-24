@@ -57,18 +57,20 @@ let decompose_name filename =
   
 let line length = String.make length '-';;
   
-let fa drive_letter print_headers print_frugal =
+let fa drive_letter print_headers print_frugal print_double_space =
   let dir_0 = Unix.getcwd () in
   let dir_name = Printf.sprintf "%s:%s" drive_letter kindle_directory in
   Unix.chdir dir_name;
   let dh = Unix.opendir "." in
   let max_file_size = ref 0 in
   let max_filename_length = ref 0 in
+  let vspace = if print_double_space then "\n\n"
+               else "\n" in
   let list =
     let rec loop acc =
       match Unix.readdir dh with
       | exception End_of_file ->
-         (* chdir and close so when run in the repl the pwd does
+         (* chdir and close so when run in the repl the wd does
             not remain in the kindle, so it can be umounted *)
          Unix.chdir dir_0;
          Unix.closedir dh;
@@ -130,23 +132,25 @@ let fa drive_letter print_headers print_frugal =
           begin match print_headers, last_printed_type with
           | true, last_type when last_type <> Some atype ->
              if print_frugal then begin
-                 Printf.printf "\n%s [%*s]\n" header_1 (amp_type - 2) atype
+                 Printf.printf "\n%s [%*s]%s" header_1 (amp_type - 2) atype vspace;
                end else begin
-                 Printf.printf "\n%s\n" header_1
+                 Printf.printf "\n%s%s" header_1 vspace;
                end;
-             Printf.printf "%s\n" header_2;
+             Printf.printf "%s%s" header_2 vspace;
           | _ -> ()
           end;
           if print_frugal then begin
-              Printf.printf "%*s %s\n"
+              Printf.printf "%*s %s%s"
                             amp_size (ultospun size)
                             displayed_name
+                            vspace
             end else begin
-              Printf.printf "%*s %*s [%*s] %s\n"
+              Printf.printf "%*s %*s [%*s] %s%s"
                             amp_ord (Printf.sprintf "[%s]" (ultospun k))
                             amp_size (ultospun size)
                             (amp_type - 2) atype
                             displayed_name
+                            vspace
             end;
           (succ k, Some atype))
         (1, None)
@@ -155,16 +159,17 @@ let fa drive_letter print_headers print_frugal =
   ();;
   
 let default_frugal = true;;
+let default_double_space = true;;
 let print_headers = true;;
   
 let () =
   if not !Sys.interactive then begin
       try match Array.length Sys.argv with
-          | 1 -> fa kindle_default_drive_letter true default_frugal
-          | 2 -> fa Sys.argv.(1) true default_frugal
+          | 1 -> fa kindle_default_drive_letter true default_frugal default_double_space
+          | 2 -> fa Sys.argv.(1) true default_frugal default_double_space
           | 3 -> begin match String.lowercase Sys.argv.(2) with
-                 | "y" | "yes"-> fa Sys.argv.(1) print_headers true
-                 | "n" | "no" -> fa Sys.argv.(1) print_headers false
+                 | "y" | "yes"-> fa Sys.argv.(1) print_headers true default_double_space
+                 | "n" | "no" -> fa Sys.argv.(1) print_headers false default_double_space
                  | _ -> error_report_and_user_help ()
                  end
           | _ -> error_report_and_user_help ()
