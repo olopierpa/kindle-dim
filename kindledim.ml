@@ -14,8 +14,8 @@ let ultospun ?(length = 3) ?(separator = "_") n =
   
 (****************************************************************)
   
-let kindle_default_drive_letter = "G";;
-let kindle_directory = "\\documents";;
+let kindle_default_mount_point = "G:";;
+let kindle_directory = "/documents";;
   
 let max_displayed_title_length = 32;;
   
@@ -27,8 +27,8 @@ let error_report_and_user_help () =
   Array.iter
     (fun s -> Printf.fprintf stderr "%s\n" s)
     [|
-      "  - mount_point is the point where the the Kindle is mounted (default \"G\").";
-      "    On Windows this is the drive letter used.";
+      "  - mount_point is the point where the the Kindle is mounted (default \"G:\").";
+      "    On Windows this is the drive letter used (followed by a colon).";
       "  - frugal can be yes or no. Default is yes.";
       "    When yes, a format using less horizontal space is selected.";
     |];
@@ -57,9 +57,9 @@ let decompose_name filename =
   
 let line length = String.make length '-';;
   
-let fa drive_letter print_headers print_frugal print_double_space =
+let fa mount_point print_headers print_frugal print_double_space =
   let dir_0 = Unix.getcwd () in
-  let dir_name = Printf.sprintf "%s:%s" drive_letter kindle_directory in
+  let dir_name = Printf.sprintf "%s%s" mount_point kindle_directory in
   Unix.chdir dir_name;
   let dh = Unix.opendir "." in
   let max_file_size = ref 0 in
@@ -165,7 +165,7 @@ let print_headers = true;;
 let () =
   if not !Sys.interactive then begin
       try match Array.length Sys.argv with
-          | 1 -> fa kindle_default_drive_letter true default_frugal default_double_space
+          | 1 -> fa kindle_default_mount_point true default_frugal default_double_space
           | 2 -> fa Sys.argv.(1) true default_frugal default_double_space
           | 3 -> begin match String.lowercase Sys.argv.(2) with
                  | "y" | "yes"-> fa Sys.argv.(1) print_headers true default_double_space
